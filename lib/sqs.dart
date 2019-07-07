@@ -48,10 +48,9 @@ class Sqs {
     ).sendRequest();
     response.validateStatus();
     XmlDocument xml = parse(await response.readAsString());
-    final queueUrl = xml.findAllElements('QueueUrl').first.text;
-    return this.queue(queueUrl);
+    final url = xml.findAllElements('QueueUrl').first.text;
+    return this.queue(url);
   }
-
 }
 
 /// AWS SQS message.
@@ -91,6 +90,8 @@ class SqsQueue {
     assert(this._queueUrl != null);
   }
 
+  String get queueUrl => _queueUrl;
+  
   /// Receives a single message from the queue.
   Future<SqsMessage> receiveOne({int waitSeconds}) async {
     List<SqsMessage> messages =
