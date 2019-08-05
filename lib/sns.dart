@@ -100,7 +100,7 @@ class SnsEndpoint {
   /// push message to this endpoint
   /// implements of https://docs.aws.amazon.com/sns/latest/api/API_Publish.html
   /// return MessageId type:String
-  Future<String> pushNotification(String body) async {
+  Future<String> pushNotification(dynamic body) async {
     Map<String, String> parameters = {
       'Action': 'Publish',
       'TargetArn': this._arn,
