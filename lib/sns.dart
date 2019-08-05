@@ -105,6 +105,7 @@ class SnsEndpoint {
       'Action': 'Publish',
       'TargetArn': this._arn,
       'Message': body,
+      'MessageStructure':'json',
       'Version': '2010-03-31'
     };
     XmlDocument xml = parse(await this._sendRequest(parameters));
