@@ -5,7 +5,7 @@ import 'src/credentials.dart';
 import 'package:http_client/http_client.dart' as http;
 import 'package:xml/xml.dart';
 
-typedef Future<String> RequestExecutor(Map<String, String> parameter);
+typedef Future<String> RequestExecutor(Map<String, dynamic> parameter);
 
 /// AWS SQS (Simple Queue Service).
 class Sns {
@@ -101,7 +101,7 @@ class SnsEndpoint {
   /// implements of https://docs.aws.amazon.com/sns/latest/api/API_Publish.html
   /// return MessageId type:String
   Future<String> pushNotification(dynamic body) async {
-    Map<String, String> parameters = {
+    final parameters = {
       'Action': 'Publish',
       'TargetArn': this._arn,
       'Message': body,
