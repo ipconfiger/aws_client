@@ -178,6 +178,7 @@ class SqsQueue {
           httpClient: _httpClient,
         ).sendRequest();
         response.validateStatus();
+        return;
       }
       on Exception catch (e){
         lastE = e;
@@ -213,6 +214,7 @@ class SqsQueue {
           httpClient: _httpClient,
         ).sendRequest();
         response.validateStatus();
+        return;
       }
       on Exception catch (e){
         lastE = e;
@@ -244,6 +246,7 @@ class SqsQueue {
           httpClient: _httpClient,
         ).sendRequest();
         response.validateStatus();
+        return;
       }
       on Exception catch (e) {
         lastE = e;
