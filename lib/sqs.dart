@@ -187,6 +187,42 @@ class SqsQueue {
     }
   }
 
+  Future deleteMassges(List<String> receiptHandles, {int retry:3}) async {
+    Map<String, String> parameters = {
+      'Action': 'DeleteMessageBatch',
+      'Version': '2012-11-05',
+    };
+    int _idx = 1;
+    for(String handle in receiptHandles){
+        final key1 = "DeleteMessageBatchRequestEntry.$_idx.Id";
+        final key2 = "DeleteMessageBatchRequestEntry.$_idx.ReceiptHandle";
+        parameters.addAll({
+          key1: "msg$_idx",
+          key2: handle
+        });
+    }
+    var lastE;
+    for(var i=0; i<retry; i++) {
+      try {
+        AwsResponse response = await new AwsRequestBuilder(
+          method: 'POST',
+          baseUrl: _queueUrl,
+          formParameters: parameters,
+          credentials: _credentials,
+          httpClient: _httpClient,
+        ).sendRequest();
+        response.validateStatus();
+      }
+      on Exception catch (e){
+        lastE = e;
+      }
+    }
+    if (lastE!=null){
+      throw lastE;
+    }
+  }
+
+
   /// Sends a new message into the queue.
   ///
   /// http://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_SendMessage.html
