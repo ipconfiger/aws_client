@@ -107,7 +107,7 @@ class SqsQueue {
   /// available immediately.
   ///
   /// http://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_ReceiveMessage.html
-  Future<List<SqsMessage>> receiveMessage(int number, {int waitSeconds}) async {
+  Future<List<SqsMessage>> receiveMessage(int number, {int waitSeconds, int retry:3}) async {
     assert(number > 0);
     Map<String, String> parameters = {
       'Action': 'ReceiveMessage',
@@ -117,61 +117,103 @@ class SqsQueue {
     if (waitSeconds != null) {
       parameters['WaitTimeSeconds'] = waitSeconds.toString();
     }
-    AwsResponse response = await new AwsRequestBuilder(
-      method: 'POST',
-      baseUrl: _queueUrl,
-      formParameters: parameters,
-      credentials: _credentials,
-      httpClient: _httpClient,
-    ).sendRequest();
-    response.validateStatus();
-    XmlDocument xml = parse(await response.readAsString());
-    return xml
-        .findAllElements('Message')
+    var lastE;
+    for(var i=0; i<retry; i++){
+      try {
+        AwsResponse response = await new AwsRequestBuilder(
+          method: 'POST',
+          baseUrl: _queueUrl,
+          formParameters: parameters,
+          credentials: _credentials,
+          httpClient: _httpClient,
+        ).sendRequest();
+        response.validateStatus();
+        XmlDocument xml = parse(await response.readAsString());
+        return xml
+            .findAllElements('Message')
         // LOW PRIORITY: check MD5 signature
-        .map((XmlElement elem) => new SqsMessage(
-              elem.findElements('MessageId').first.text,
-              elem.findElements('ReceiptHandle').first.text,
-              elem.findElements('Body').first.text,
-            ))
-        .toList();
+            .map((XmlElement elem) =>
+        new SqsMessage(
+          elem
+              .findElements('MessageId')
+              .first
+              .text,
+          elem
+              .findElements('ReceiptHandle')
+              .first
+              .text,
+          elem
+              .findElements('Body')
+              .first
+              .text,
+        ))
+            .toList();
+      } on Exception catch (e){
+        lastE = e;
+      }
+    }
+    if (lastE!=null){
+      throw lastE;
+    }
   }
 
   /// Delete a message from the queue by its [receiptHandle].
   ///
   /// http://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_DeleteMessage.html
-  Future deleteMessage(String receiptHandle) async {
+  Future deleteMessage(String receiptHandle, {int retry:3}) async {
     Map<String, String> parameters = {
       'Action': 'DeleteMessage',
       'ReceiptHandle': receiptHandle,
       'Version': '2012-11-05',
     };
-    AwsResponse response = await new AwsRequestBuilder(
-      method: 'POST',
-      baseUrl: _queueUrl,
-      formParameters: parameters,
-      credentials: _credentials,
-      httpClient: _httpClient,
-    ).sendRequest();
-    response.validateStatus();
+    var lastE;
+    for(var i=0; i<retry; i++) {
+      try {
+        AwsResponse response = await new AwsRequestBuilder(
+          method: 'POST',
+          baseUrl: _queueUrl,
+          formParameters: parameters,
+          credentials: _credentials,
+          httpClient: _httpClient,
+        ).sendRequest();
+        response.validateStatus();
+      }
+      on Exception catch (e){
+        lastE = e;
+      }
+    }
+    if (lastE!=null){
+      throw lastE;
+    }
   }
 
   /// Sends a new message into the queue.
   ///
   /// http://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_SendMessage.html
-  Future sendMessage(String body) async {
+  Future sendMessage(String body, {int retry:3}) async {
     Map<String, String> parameters = {
       'Action': 'SendMessage',
       'MessageBody': body,
       'Version': '2012-11-05',
     };
-    AwsResponse response = await new AwsRequestBuilder(
-      method: 'POST',
-      baseUrl: _queueUrl,
-      formParameters: parameters,
-      credentials: _credentials,
-      httpClient: _httpClient,
-    ).sendRequest();
-    response.validateStatus();
+    var lastE;
+    for (var i = 0; i < retry; i++) {
+      try {
+        AwsResponse response = await new AwsRequestBuilder(
+          method: 'POST',
+          baseUrl: _queueUrl,
+          formParameters: parameters,
+          credentials: _credentials,
+          httpClient: _httpClient,
+        ).sendRequest();
+        response.validateStatus();
+      }
+      on Exception catch (e) {
+        lastE = e;
+      }
+    }
+    if (lastE != null) {
+      throw lastE;
+    }
   }
 }
