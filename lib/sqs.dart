@@ -112,6 +112,7 @@ class SqsQueue {
     Map<String, String> parameters = {
       'Action': 'ReceiveMessage',
       'MaxNumberOfMessages': number.toString(),
+      'VisibilityTimeout': '360',
       'Version': '2012-11-05',
     };
     if (waitSeconds != null) {
