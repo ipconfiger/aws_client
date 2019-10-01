@@ -46,8 +46,10 @@ class Sqs {
       credentials: this._credentials,
       httpClient: this._httpClient,
     ).sendRequest();
+    final txt_resp = await response.readAsString();
+    print(txt_resp);
+    XmlDocument xml = parse(txt_resp);
     response.validateStatus();
-    XmlDocument xml = parse(await response.readAsString());
     final url = xml.findAllElements('QueueUrl').first.text;
     return this.queue(url);
   }
