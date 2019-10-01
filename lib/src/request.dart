@@ -35,7 +35,7 @@ class AwsResponse {
     if (statusCode == 200) return;
     // TODO: check for different type of errors
     // TODO: introduce transient exception for error handling
-    throw new Exception('Bad response code=$statusCode, $statusText.');
+    throw new Exception('Bad response code=$statusCode, $statusText. ${this.readAsString()}');
   }
 
   /// Reads the entire response into a byte array.
