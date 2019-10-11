@@ -5,6 +5,8 @@ import 'src/credentials.dart';
 import 'package:http_client/http_client.dart' as http;
 import 'package:xml/xml.dart';
 
+export 'src/request.dart';
+
 typedef Future<String> RequestExecutor(Map<String, String> parameter);
 
 /// AWS SQS (Simple Queue Service).

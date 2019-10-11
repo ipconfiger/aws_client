@@ -11,6 +11,10 @@ import 'package:http_client/http_client.dart';
 
 import 'credentials.dart';
 
+class AwsAuthException implements Exception {
+  String errMsg() => 'Aws auth error!';
+}
+
 /// AWS response object.
 class AwsResponse {
   /// HTTP status code.
@@ -35,6 +39,9 @@ class AwsResponse {
     if (statusCode == 200) return;
     // TODO: check for different type of errors
     // TODO: introduce transient exception for error handling
+    if (statusCode >=400 && statusCode<500){
+      throw new AwsAuthException();
+    }
     throw new Exception('Bad response code=$statusCode, $statusText.');
   }
 
