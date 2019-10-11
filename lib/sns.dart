@@ -67,7 +67,8 @@ class Sns {
       'PlatformApplicationArn': applicationArn,
       'Token': pushToken,
       'CustomUserData': userData,
-      'Version': '2010-03-31'
+      'Version': '2010-03-31',
+      'Enabled': 'true'
     };
     XmlDocument xml = parse(await this._sendRequest(parameters));
     final endpointArn = xml.findAllElements('EndpointArn').first.text;
