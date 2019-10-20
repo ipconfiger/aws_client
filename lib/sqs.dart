@@ -216,6 +216,7 @@ class SqsQueue {
           httpClient: _httpClient,
         ).sendRequest();
         response.validateStatus();
+        print(response.readAsString());
         return;
       }
       on Exception catch (e){
