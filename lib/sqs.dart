@@ -204,6 +204,7 @@ class SqsQueue {
           key1: "msg$_idx",
           key2: handle
         });
+        _idx++;
     }
     var lastE;
     for(var i=0; i<retry; i++) {
@@ -216,7 +217,6 @@ class SqsQueue {
           httpClient: _httpClient,
         ).sendRequest();
         response.validateStatus();
-        print(response.readAsString());
         return;
       }
       on Exception catch (e){
