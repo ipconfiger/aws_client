@@ -128,12 +128,12 @@ class AwsRequestBuilder {
   });
 
   /// Initializes and signs a request.
-  Request buildRequest(timeout) {
+  Request buildRequest(int timeout) {
     assert(credentials != null);
     assert(httpClient != null);
     _initDefaults();
     _sign();
-    return new Request(method, uri, headers: headers, body: body, timeout: timeout);
+    return new Request(method, uri, headers: headers, body: body, timeout: Duration(seconds: timeout));
   }
 
   /// Initializes, signs and send the request.
