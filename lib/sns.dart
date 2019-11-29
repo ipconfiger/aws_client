@@ -27,28 +27,22 @@ class Sns {
   /// execute real request
   Future<String> _sendRequest(Map<String, String> parameters, {int retry:3}) async {
     final endpoint = 'https://sns.${this._region}.amazonaws.com/';
-
-    var lastE;
-    for(var i=0; i<retry; i++) {
-      try {
-        AwsResponse response = await new AwsRequestBuilder(
-          method: 'POST',
-          baseUrl: endpoint,
-          formParameters: parameters,
-          credentials: this._credentials,
-          httpClient: this._httpClient,
-        ).sendRequest(timeout: 10);
-        final respString = await response.readAsString();
-        print('resp:${respString}');
-        response.validateStatus();
-        return respString;
-      } on Exception catch (e){
-        lastE = e;
-      }
+    try {
+      AwsResponse response = await new AwsRequestBuilder(
+        method: 'POST',
+        baseUrl: endpoint,
+        formParameters: parameters,
+        credentials: this._credentials,
+        httpClient: this._httpClient,
+      ).sendRequest(timeout: 10);
+      final respString = await response.readAsString();
+      print('resp:${respString}');
+      response.validateStatus();
+      return respString;
+    } on Exception catch (e){
+      throw e;
     }
-    if (lastE!=null){
-      throw lastE;
-    }
+    
   }
 
   /// return an Endpoint of arn
