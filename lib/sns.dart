@@ -37,7 +37,7 @@ class Sns {
           formParameters: parameters,
           credentials: this._credentials,
           httpClient: this._httpClient,
-        ).sendRequest();
+        ).sendRequest(timeout: 10);
         final respString = await response.readAsString();
         print('resp:${respString}');
         response.validateStatus();

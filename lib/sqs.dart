@@ -129,7 +129,7 @@ class SqsQueue {
           formParameters: parameters,
           credentials: _credentials,
           httpClient: _httpClient,
-        ).sendRequest(timeout: 20);
+        ).sendRequest(timeout: 22);
         response.validateStatus();
         XmlDocument xml = parse(await response.readAsString());
         return xml
@@ -178,7 +178,7 @@ class SqsQueue {
           formParameters: parameters,
           credentials: _credentials,
           httpClient: _httpClient,
-        ).sendRequest(timeout: 5);
+        ).sendRequest(timeout: 10);
         response.validateStatus();
         return;
       }
@@ -215,7 +215,7 @@ class SqsQueue {
           formParameters: parameters,
           credentials: _credentials,
           httpClient: _httpClient,
-        ).sendRequest(timeout: 5);
+        ).sendRequest(timeout: 10);
         response.validateStatus();
         return;
       }
