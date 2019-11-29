@@ -128,18 +128,17 @@ class AwsRequestBuilder {
   });
 
   /// Initializes and signs a request.
-  Request buildRequest() {
+  Request buildRequest(timeout) {
     assert(credentials != null);
     assert(httpClient != null);
     _initDefaults();
     _sign();
-    return new Request(method, uri, headers: headers, body: body);
+    return new Request(method, uri, headers: headers, body: body, timeout: timeout);
   }
 
   /// Initializes, signs and send the request.
   Future<AwsResponse> sendRequest({int timeout:20}) async {
-    Request rq = buildRequest();
-    rq.timeout = timeout;
+    Request rq = buildRequest(timeout);
     Response rs = await httpClient.send(rq);
     return new AwsResponse(
         rs.statusCode, rs.reasonPhrase, rs.headers.toSimpleMap(), rs.body);
