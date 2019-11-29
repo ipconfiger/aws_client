@@ -1,12 +1,12 @@
 name: aws_client
 description: High-level APIs for Amazon Web Services (AWS)
-version: 0.2.0
+version: 0.2.1
 author: Istvan Soos <istvan.soos@agilord.com>
 
 homepage: https://github.com/agilord/aws_client
 
 environment:
-  sdk: '>=2.0.0 <3.0.0'
+  sdk: '>=2.4.0 <3.0.0'
 
 dependencies:
   crypto: ^2.0.1

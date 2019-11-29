@@ -129,7 +129,7 @@ class SqsQueue {
           formParameters: parameters,
           credentials: _credentials,
           httpClient: _httpClient,
-        ).sendRequest();
+        ).sendRequest(timeout: 20);
         response.validateStatus();
         XmlDocument xml = parse(await response.readAsString());
         return xml
@@ -178,7 +178,7 @@ class SqsQueue {
           formParameters: parameters,
           credentials: _credentials,
           httpClient: _httpClient,
-        ).sendRequest();
+        ).sendRequest(timeout: 5);
         response.validateStatus();
         return;
       }
@@ -215,7 +215,7 @@ class SqsQueue {
           formParameters: parameters,
           credentials: _credentials,
           httpClient: _httpClient,
-        ).sendRequest();
+        ).sendRequest(timeout: 5);
         response.validateStatus();
         return;
       }
@@ -232,7 +232,7 @@ class SqsQueue {
   /// Sends a new message into the queue.
   ///
   /// http://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_SendMessage.html
-  Future sendMessage(String body, {int retry:3}) async {
+  Future sendMessage(String body, {int retry:3, int timeout}) async {
     Map<String, String> parameters = {
       'Action': 'SendMessage',
       'MessageBody': body,
@@ -247,7 +247,7 @@ class SqsQueue {
           formParameters: parameters,
           credentials: _credentials,
           httpClient: _httpClient,
-        ).sendRequest();
+        ).sendRequest(timeout: timeout);
         response.validateStatus();
         return;
       }
