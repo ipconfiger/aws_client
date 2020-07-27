@@ -246,11 +246,9 @@ class SqsQueue {
     Map<String, String> parameters = {
       'Action': 'SendMessage',
       'MessageBody': body,
-      'MessageAttribute.1.Name': 'MessageDeduplicationId',
-      'MessageAttribute.1.Value': did,
-      'MessageAttribute.2.Name':'MessageGroupId',
-      'MessageAttribute.2.Value': 'normal_message',
-      'Version': '2012-11-05',
+      'MessageDeduplicationId': did,
+      'MessageGroupId': 'normal_message',
+      'Version': '2012-11-05'
     };
     var lastE;
     for (var i = 0; i < retry; i++) {
