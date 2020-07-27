@@ -3,6 +3,8 @@
 // in the LICENSE file.
 
 import 'dart:async';
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 import 'package:meta/meta.dart';
 import 'src/request.dart';
 import 'src/credentials.dart';
@@ -240,15 +242,19 @@ class SqsQueue {
   ///
   /// http://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_SendMessage.html
   Future sendMessage(String body, {int retry:3, int timeout}) async {
+    final did = md5.convert(utf8.encode(body)).toString();
     Map<String, String> parameters = {
       'Action': 'SendMessage',
       'MessageBody': body,
+      'MessageAttribute.1.Name': 'MessageDeduplicationId',
+      'MessageAttribute.1.Value': did,
       'Version': '2012-11-05',
     };
     var lastE;
     for (var i = 0; i < retry; i++) {
+      AwsResponse response;
       try {
-        AwsResponse response = await new AwsRequestBuilder(
+          response= await new AwsRequestBuilder(
           method: 'POST',
           baseUrl: _queueUrl,
           formParameters: parameters,
@@ -260,6 +266,7 @@ class SqsQueue {
       }
       on Exception catch (e) {
         lastE = e;
+        print(await response.readAsString());
       }
     }
     if (lastE != null) {
