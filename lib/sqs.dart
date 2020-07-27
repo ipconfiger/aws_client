@@ -27,7 +27,7 @@ class Sqs {
       credentials: _credentials, httpClient: _httpClient);
 
   /// Create a new SQS queue
-  Future<SqsQueue> create({@required String region, @required String queueName, String maxSize:'1024', String retentionPeriod:'345600'}) async {
+  Future<SqsQueue> create({@required String region, @required String queueName, String maxSize:'1024', String retentionPeriod:'345600', bool isFifo: false}) async {
     assert(region!='');
     assert(queueName!='');
     final endpoint = "https://sqs.${region}.amazonaws.com/";
@@ -39,6 +39,13 @@ class Sqs {
       'Attribute.2.Name': 'MessageRetentionPeriod',
       'Attribute.2.Value': retentionPeriod
     };
+    if (isFifo){
+      parameters.addAll({
+        'Attribute.3.Name': 'FifoQueue',
+        'Attribute.3.Value': 'true'
+      });
+      parameters['QueueName'] = parameters['QueueName'] + ".fifo";
+    }
     AwsResponse response = await new AwsRequestBuilder(
       method: 'GET',
       baseUrl: endpoint,
