@@ -241,15 +241,17 @@ class SqsQueue {
   /// Sends a new message into the queue.
   ///
   /// http://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_SendMessage.html
-  Future sendMessage(String body, {int retry:3, int timeout}) async {
-    final did = md5.convert(utf8.encode(body)).toString();
+  Future sendMessage(String body, {int retry:3, int timeout, isFifo:false}) async {
     Map<String, String> parameters = {
       'Action': 'SendMessage',
       'MessageBody': body,
-      'MessageDeduplicationId': did,
-      'MessageGroupId': 'normal_message',
       'Version': '2012-11-05'
     };
+    if (isFifo){
+      final did = md5.convert(utf8.encode(body)).toString();
+      parameters.addAll({'MessageDeduplicationId': did,
+        'MessageGroupId': 'normal_message'});
+    }
     var lastE;
     for (var i = 0; i < retry; i++) {
       AwsResponse response;
