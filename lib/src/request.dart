@@ -36,7 +36,7 @@ class AwsResponse {
 
   /// A very lousy way to validate some of the common status codes.
   void validateStatus() {
-    if (statusCode == 200) return;
+    if (statusCode >= 200 && statusCode < 300) return;
     // TODO: check for different type of errors
     // TODO: introduce transient exception for error handling
     if (statusCode >=400 && statusCode<500){
@@ -128,23 +128,23 @@ class AwsRequestBuilder {
   });
 
   /// Initializes and signs a request.
-  Request buildRequest(int timeout) {
+  Request buildRequest(int timeout, bool needResion) {
     assert(credentials != null);
     assert(httpClient != null);
-    _initDefaults();
+    _initDefaults(needResion: needResion);
     _sign();
     return new Request(method, uri, headers: headers, body: body, timeout: Duration(seconds: timeout));
   }
 
   /// Initializes, signs and send the request.
-  Future<AwsResponse> sendRequest({int timeout:20}) async {
-    Request rq = buildRequest(timeout);
+  Future<AwsResponse> sendRequest({int timeout:20, bool noRegion:false}) async {
+    Request rq = buildRequest(timeout, noRegion);
     Response rs = await httpClient.send(rq);
     return new AwsResponse(
         rs.statusCode, rs.reasonPhrase, rs.headers.toSimpleMap(), rs.body);
   }
 
-  void _initDefaults() {
+  void _initDefaults({bool needResion: false}) {
     if (uri != null) {
       assert(baseUrl == null);
       assert(queryParameters == null);
@@ -179,8 +179,12 @@ class AwsRequestBuilder {
                 .split('.')
                 .first +
             'Z');
-    region ??= _extractRegion(uri);
-    service ??= _extractService(uri);
+    if (!needResion){
+      region ??= _extractRegion(uri);
+    }
+    if (this.service == null) {
+      service ??= _extractService(uri);
+    }
   }
 
   void _sign() {
@@ -198,6 +202,9 @@ class AwsRequestBuilder {
 
     String payloadHash =
         headers['X-Amz-Content-Sha256'] ?? sha256.convert(body).toString();
+    if (!headers.containsKey('X-Amz-Content-Sha256')){
+      headers['X-Amz-Content-Sha256'] = payloadHash;
+    }
 
     String canonical = ([
       method.toUpperCase(),
