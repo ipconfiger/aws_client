@@ -17,7 +17,7 @@ void main() {
         region:"us-west-1",
         httpClient: httpClient
     );
-    final resp = await client.putObject("", "test.txt", Uint8List.fromList(utf8.encode("test content")));
+    final resp = await client.putObject("cologfilestorage", "test.txt", Uint8List.fromList(utf8.encode("test content")));
     print(resp);
     expect(true, true);
   });
