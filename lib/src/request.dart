@@ -39,7 +39,7 @@ class AwsResponse {
     if (statusCode >= 200 && statusCode < 300) return;
     // TODO: check for different type of errors
     // TODO: introduce transient exception for error handling
-    if (statusCode >=400 && statusCode<500){
+    if (statusCode >= 400 && statusCode < 500) {
       throw new AwsAuthException();
     }
     throw new Exception('Bad response code=$statusCode, $statusText.');
@@ -133,11 +133,13 @@ class AwsRequestBuilder {
     assert(httpClient != null);
     _initDefaults(needResion: needResion);
     _sign();
-    return new Request(method, uri, headers: headers, body: body, timeout: Duration(seconds: timeout));
+    return new Request(method, uri,
+        headers: headers, body: body, timeout: Duration(seconds: timeout));
   }
 
   /// Initializes, signs and send the request.
-  Future<AwsResponse> sendRequest({int timeout:20, bool noRegion:false}) async {
+  Future<AwsResponse> sendRequest(
+      {int timeout: 20, bool noRegion: false}) async {
     Request rq = buildRequest(timeout, noRegion);
     Response rs = await httpClient.send(rq);
     return new AwsResponse(
@@ -179,7 +181,7 @@ class AwsRequestBuilder {
                 .split('.')
                 .first +
             'Z');
-    if (!needResion){
+    if (!needResion) {
       region ??= _extractRegion(uri);
     }
     if (this.service == null) {
@@ -202,7 +204,7 @@ class AwsRequestBuilder {
 
     String payloadHash =
         headers['X-Amz-Content-Sha256'] ?? sha256.convert(body).toString();
-    if (!headers.containsKey('X-Amz-Content-Sha256')){
+    if (!headers.containsKey('X-Amz-Content-Sha256')) {
       headers['X-Amz-Content-Sha256'] = payloadHash;
     }
 

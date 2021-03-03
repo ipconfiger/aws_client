@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:http_client/http_client.dart' as http;
+import 'package:xml/xml.dart';
 
 import 'src/credentials.dart';
 import 'src/request.dart';
@@ -25,7 +27,7 @@ class S3 {
   final String _region;
 
   /// execute real request
-  Future<String> _sendRequest(
+  Future<AwsResponse> _sendRequest(
       String method,
       String bucketName,
       Map<String, String> headers,
@@ -42,6 +44,7 @@ class S3 {
                 method: method,
                 baseUrl: endpoint,
                 headers: headers,
+                queryParameters: parameters,
                 body: body,
                 credentials: this._credentials,
                 httpClient: this._httpClient,
@@ -53,17 +56,21 @@ class S3 {
                 method: method,
                 baseUrl: endpoint,
                 headers: headers,
-                formParameters: parameters,
+                queryParameters: parameters,
                 credentials: this._credentials,
                 httpClient: this._httpClient,
                 region: _region,
                 service: "s3")
             .sendRequest(timeout: 10);
       }
-      final respString = await response.readAsString();
-      print('resp:${respString}');
-      response.validateStatus();
-      return respString;
+      try {
+        response.validateStatus();
+      } on AwsAuthException catch (e) {
+        print("${await response.readAsString()}");
+        throw e;
+      }
+
+      return response;
     } on Exception catch (e) {
       throw e;
     }
@@ -76,22 +83,57 @@ class S3 {
     headers['X-Amz-Acl'] = 'public-read';
     final resp = await this._sendRequest(
         'PUT', bucketName, headers, null, fileData.toList(), objectKey);
-    return resp;
+    return await resp.readAsString();
   }
 
   Future rmObject(String bucketName, String objectKey) async {
     final headers = <String, String>{};
     final resp = await this._sendRequest(
         'DELETE', bucketName, headers, <String, String>{}, null, objectKey);
-    print(resp);
   }
 
-  Future<String> initPartialUpload(String bucketName, String objectKey) async {
+  /// init partial upload request get upload id
+  Future<AwsResponse> initPartialUpload(
+      String bucketName, String objectKey) async {
     final headers = <String, String>{};
     headers['X-Amz-Acl'] = 'public-read';
     final resp = await this._sendRequest(
         'POST', bucketName, headers, null, null, objectKey,
         extra: "?uploads");
+    return resp;
+  }
+
+  Future<AwsResponse> partialUpload(String bucketName, String objectKey,
+      String uploadId, int partNumber, List<int> data) async {
+    final params = <String, String>{};
+    params["partNumber"] = '$partNumber';
+    params["uploadId"] = uploadId;
+    final resp = await this
+        ._sendRequest('PUT', bucketName, null, params, data, objectKey);
+    return resp;
+  }
+
+  /// complete partial upload
+  Future<AwsResponse> completeMultipartUpload(String bucketName,
+      String objectKey, String uploadId, List<String> etags) async {
+    final params = {"uploadId": uploadId};
+    final builder = XmlBuilder();
+    builder.element("CompleteMultipartUpload", nest: () {
+      for (var i = 0; i < etags.length; i++) {
+        builder.element("Part", nest: () {
+          builder.element("PartNumber", nest: () {
+            builder.text("${i + 1}");
+          });
+          builder.element("ETag", nest: () {
+            builder.text("${etags[i]}");
+          });
+        });
+      }
+    });
+    final xml_request = builder.buildDocument().toXmlString();
+    print("complete xml:\n$xml_request");
+    final resp = await this._sendRequest(
+        'POST', bucketName, null, params, utf8.encode(xml_request), objectKey);
     return resp;
   }
 }
