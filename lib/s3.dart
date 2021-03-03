@@ -1,11 +1,10 @@
 import 'dart:async';
 import 'dart:typed_data';
-import 'dart:async';
-import 'dart:io';
-import 'package:crypto/crypto.dart';
-import 'src/request.dart';
-import 'src/credentials.dart';
+
 import 'package:http_client/http_client.dart' as http;
+
+import 'src/credentials.dart';
+import 'src/request.dart';
 
 export 'src/request.dart';
 
@@ -33,62 +32,66 @@ class S3 {
       Map<String, String> parameters,
       List<int> body,
       String key,
-      {int retry:3}
-      ) async {
-
-    final endpoint = 'https://$bucketName.s3.amazonaws.com/$key';
+      {int retry: 3,
+      String extra: ''}) async {
+    final endpoint = 'https://$bucketName.s3-$_region.amazonaws.com/$key$extra';
     try {
       AwsResponse response;
-      if (body != null){
+      if (body != null) {
         response = await new AwsRequestBuilder(
-          method: method,
-          baseUrl: endpoint,
-          headers: headers,
-          body:body,
-          credentials: this._credentials,
-          httpClient: this._httpClient,
-          region: _region,
-            service: "s3"
-        ).sendRequest(timeout: 10);
-
-      }else{
+                method: method,
+                baseUrl: endpoint,
+                headers: headers,
+                body: body,
+                credentials: this._credentials,
+                httpClient: this._httpClient,
+                region: _region,
+                service: "s3")
+            .sendRequest(timeout: 10);
+      } else {
         response = await new AwsRequestBuilder(
-          method: method,
-          baseUrl: endpoint,
-          headers: headers,
-          formParameters: parameters,
-          credentials: this._credentials,
-          httpClient: this._httpClient,
-            region: _region,
-            service: "s3"
-        ).sendRequest(timeout: 10);
-
+                method: method,
+                baseUrl: endpoint,
+                headers: headers,
+                formParameters: parameters,
+                credentials: this._credentials,
+                httpClient: this._httpClient,
+                region: _region,
+                service: "s3")
+            .sendRequest(timeout: 10);
       }
       final respString = await response.readAsString();
       print('resp:${respString}');
       response.validateStatus();
       return respString;
-    } on Exception catch (e){
+    } on Exception catch (e) {
       throw e;
     }
-
   }
 
-
-  Future<String> putObject(String bucketName, String objectKey, Uint8List fileData) async {
+  Future<String> putObject(
+      String bucketName, String objectKey, Uint8List fileData) async {
     final headers = <String, String>{};
     headers['Content-Length'] = "${fileData.length}";
     headers['X-Amz-Acl'] = 'public-read';
-    final resp = await this._sendRequest('PUT', bucketName, headers, null, fileData.toList(), objectKey);
+    final resp = await this._sendRequest(
+        'PUT', bucketName, headers, null, fileData.toList(), objectKey);
     return resp;
   }
 
   Future rmObject(String bucketName, String objectKey) async {
     final headers = <String, String>{};
-    final resp = await this._sendRequest('DELETE', bucketName, headers, <String, String>{}, null, objectKey);
+    final resp = await this._sendRequest(
+        'DELETE', bucketName, headers, <String, String>{}, null, objectKey);
     print(resp);
   }
 
-
-
+  Future<String> initPartialUpload(String bucketName, String objectKey) async {
+    final headers = <String, String>{};
+    headers['X-Amz-Acl'] = 'public-read';
+    final resp = await this._sendRequest(
+        'POST', bucketName, headers, null, null, objectKey,
+        extra: "?uploads");
+    return resp;
+  }
 }
