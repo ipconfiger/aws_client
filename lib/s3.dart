@@ -34,7 +34,8 @@ class S3 {
       Map<String, String> parameters,
       List<int> body,
       String key,
-      {int retry: 3,
+      {int timeout: 180,
+      int retry: 3,
       String extra: ''}) async {
     final endpoint = 'https://$bucketName.s3-$_region.amazonaws.com/$key$extra';
     try {
@@ -50,7 +51,7 @@ class S3 {
                 httpClient: this._httpClient,
                 region: _region,
                 service: "s3")
-            .sendRequest(timeout: 10);
+            .sendRequest(timeout: timeout);
       } else {
         response = await new AwsRequestBuilder(
                 method: method,
@@ -61,7 +62,7 @@ class S3 {
                 httpClient: this._httpClient,
                 region: _region,
                 service: "s3")
-            .sendRequest(timeout: 10);
+            .sendRequest(timeout: timeout);
       }
       try {
         response.validateStatus();
@@ -77,45 +78,52 @@ class S3 {
   }
 
   Future<String> putObject(
-      String bucketName, String objectKey, Uint8List fileData) async {
+      String bucketName, String objectKey, Uint8List fileData,
+      {int timeout: 180}) async {
     final headers = <String, String>{};
     headers['Content-Length'] = "${fileData.length}";
     headers['X-Amz-Acl'] = 'public-read';
     final resp = await this._sendRequest(
-        'PUT', bucketName, headers, null, fileData.toList(), objectKey);
+        'PUT', bucketName, headers, null, fileData.toList(), objectKey,
+        timeout: timeout);
     return await resp.readAsString();
   }
 
-  Future rmObject(String bucketName, String objectKey) async {
+  Future rmObject(String bucketName, String objectKey,
+      {int timeout: 30}) async {
     final headers = <String, String>{};
     final resp = await this._sendRequest(
-        'DELETE', bucketName, headers, <String, String>{}, null, objectKey);
+        'DELETE', bucketName, headers, <String, String>{}, null, objectKey,
+        timeout: timeout);
   }
 
   /// init partial upload request get upload id
-  Future<AwsResponse> initPartialUpload(
-      String bucketName, String objectKey) async {
+  Future<AwsResponse> initPartialUpload(String bucketName, String objectKey,
+      {int timeout: 180}) async {
     final headers = <String, String>{};
     headers['X-Amz-Acl'] = 'public-read';
     final resp = await this._sendRequest(
         'POST', bucketName, headers, null, null, objectKey,
-        extra: "?uploads");
+        timeout: timeout, extra: "?uploads");
     return resp;
   }
 
   Future<AwsResponse> partialUpload(String bucketName, String objectKey,
-      String uploadId, int partNumber, List<int> data) async {
+      String uploadId, int partNumber, List<int> data,
+      {int timeout: 180}) async {
     final params = <String, String>{};
     params["partNumber"] = '$partNumber';
     params["uploadId"] = uploadId;
-    final resp = await this
-        ._sendRequest('PUT', bucketName, null, params, data, objectKey);
+    final resp = await this._sendRequest(
+        'PUT', bucketName, null, params, data, objectKey,
+        timeout: timeout);
     return resp;
   }
 
   /// complete partial upload
-  Future<AwsResponse> completeMultipartUpload(String bucketName,
-      String objectKey, String uploadId, List<String> etags) async {
+  Future<AwsResponse> completeMultipartUpload(
+      String bucketName, String objectKey, String uploadId, List<String> etags,
+      {int timeout: 180}) async {
     final params = {"uploadId": uploadId};
     final builder = XmlBuilder();
     builder.element("CompleteMultipartUpload", nest: () {
@@ -133,7 +141,8 @@ class S3 {
     final xml_request = builder.buildDocument().toXmlString();
     print("complete xml:\n$xml_request");
     final resp = await this._sendRequest(
-        'POST', bucketName, null, params, utf8.encode(xml_request), objectKey);
+        'POST', bucketName, null, params, utf8.encode(xml_request), objectKey,
+        timeout: timeout);
     return resp;
   }
 }
